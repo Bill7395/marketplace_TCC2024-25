@@ -21,8 +21,10 @@ mongoose.connect('mongodb://127.0.0.1:27017/marketplaceDB', {
 
 // Model do Usuário
 const UserSchema = new mongoose.Schema({
-    username: String,
-    password: String
+    username: { type: String, required: true },
+    password: { type: String, required: true },
+    email: { type: String, required: true },
+    telefone: { type: String, required: true }
 });
 const User = mongoose.model('User', UserSchema);
 
@@ -40,17 +42,20 @@ const authMiddleware = (req, res, next) => {
 
 // Rotas de autenticação
 app.post('/register', async (req, res) => {
-    const { username, password } = req.body;
+    const { username, password, email, telefone } = req.body;
 
-    if (!username || !password)
+    // Verifica se todos os campos foram preenchidos
+    if (!username || !password || !email || !telefone)
         return res.status(400).json({ message: 'Preencha todos os campos' });
 
+    // Verifica se o usuário já existe
     const existingUser = await User.findOne({ username });
     if (existingUser)
         return res.status(400).json({ message: 'Usuário já existe' });
 
-    const hashedPassword = bcrypt.hashSync(password, 10);
-    const newUser = new User({ username, password: hashedPassword });
+    // Criptografando a senha de forma assíncrona
+    const hashedPassword = await bcrypt.hash(password, 10);  // Mudança para versão assíncrona
+    const newUser = new User({ username, password: hashedPassword, email, telefone });
     await newUser.save();
 
     res.status(201).json({ message: 'Usuário criado com sucesso!' });
@@ -59,10 +64,12 @@ app.post('/register', async (req, res) => {
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
 
+    // Verifica se o usuário existe
     const user = await User.findOne({ username });
     if (!user || !bcrypt.compareSync(password, user.password))
         return res.status(401).json({ message: 'Credenciais inválidas' });
 
+    // Gera um token de autenticação
     const token = jwt.sign({ username }, SECRET_KEY, { expiresIn: '1h' });
     res.json({ token });
 });
