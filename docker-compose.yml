@@ -1,0 +1,26 @@
+version: '3'
+services:
+  backend:
+    build: ./backend  # Diretório do backend
+    container_name: backend
+    ports:
+      - "3001:3001"  # Mapeia a porta 3001 do container para a porta 3001 local
+    depends_on:
+      - mongo  # Garante que o MongoDB seja iniciado antes do backend
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/marketplaceDB  # Conexão com o MongoDB no container
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80" # 3000 local → 80 no container (React build serve pelo Nginx)
+    depends_on:
+      - backend
+
+  mongo:
+    image: mongo:latest  # Usar a imagem oficial do MongoDB
+    container_name: mongo
+    ports:
+      - "27017:27017"  # Mapeia a porta 27017 do container para a porta 27017 local
+    volumes:
+      - ./data/db:/data/db  # Persistência de dados no diretório local

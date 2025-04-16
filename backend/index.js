@@ -13,11 +13,12 @@ app.use(cors());
 app.use(express.json());
 
 // Conectar ao MongoDB
-mongoose.connect('mongodb://127.0.0.1:27017/marketplaceDB', {
+mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/marketplaceDB', {
     useNewUrlParser: true,
     useUnifiedTopology: true
 }).then(() => console.log('✅ Conectado ao MongoDB'))
   .catch(err => console.error('❌ Erro ao conectar ao MongoDB:', err));
+
 
 // Model do Usuário
 const UserSchema = new mongoose.Schema({
